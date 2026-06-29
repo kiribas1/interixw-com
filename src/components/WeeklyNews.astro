@@ -1,0 +1,108 @@
+---
+import newsData from '../../public/weekly-news.json';
+
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+
+const titles: Record<string, string> = {
+  en: 'Offshore Business Weekly',
+  es: 'Negocios Offshore Semanal',
+  zh: '离岸商业周刊',
+  ru: 'Офшорный бизнес: еженедельник',
+  pt: 'Negocios Offshore Semanal',
+  ar: 'الأعمال الخارجية الأسبوعية',
+};
+
+const readMore: Record<string, string> = {
+  en: 'Read more',
+  es: 'Leer mas',
+  zh: '阅读更多',
+  ru: 'Читать далее',
+  pt: 'Leia mais',
+  ar: 'اقرأ المزيد',
+};
+
+const validLang = (lang in titles) ? lang : 'en';
+const news = newsData.map((item: any) => ({
+  title: item.title[validLang] || item.title.en,
+  summary: item.summary[validLang] || item.summary.en,
+  date: item.date,
+}));
+---
+
+<section class="weekly-news-section">
+  <div class="container">
+    <h2 class="news-title">{titles[validLang]}</h2>
+    <div class="news-grid">
+      {news.map((item: any) => (
+        <article class="news-card">
+          <div class="news-date">{item.date}</div>
+          <h3>{item.title}</h3>
+          <p>{item.summary}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .weekly-news-section {
+    padding: 60px 0;
+  }
+  .news-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin-bottom: 40px;
+    background: linear-gradient(135deg, #2563eb, #eab308);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .news-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s ease;
+  }
+  .news-card:hover {
+    border-color: rgba(37, 99, 235, 0.3);
+    background: rgba(37, 99, 235, 0.04);
+    transform: translateY(-2px);
+  }
+  .news-date {
+    font-size: 0.75rem;
+    color: #eab308;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .news-card h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .news-card p {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  @media (max-width: 640px) {
+    .news-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

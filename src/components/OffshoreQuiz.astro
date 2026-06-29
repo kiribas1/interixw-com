@@ -1,0 +1,385 @@
+---
+interface Props {
+  lang: string;
+}
+const { lang } = Astro.props;
+
+const labels: Record<string, { title: string; correct: string; wrong: string; score: string; playAgain: string; question: string; nextQ: string; funFact: string; finalScore: string; of: string }> = {
+  en: { title: 'Offshore Business Quiz', correct: 'Correct!', wrong: 'Wrong!', score: 'Score', playAgain: 'Play Again', question: 'Question', nextQ: 'Next Question', funFact: 'Fun Fact:', finalScore: 'Final Score', of: 'of' },
+  es: { title: 'Quiz de Negocios Offshore', correct: 'Correcto!', wrong: 'Incorrecto!', score: 'Puntuacion', playAgain: 'Jugar de Nuevo', question: 'Pregunta', nextQ: 'Siguiente Pregunta', funFact: 'Dato Curioso:', finalScore: 'Puntuacion Final', of: 'de' },
+  zh: { title: '离岸商业知识测验', correct: '正确!', wrong: '错误!', score: '得分', playAgain: '再玩一次', question: '问题', nextQ: '下一题', funFact: '趣闻:', finalScore: '最终得分', of: '/' },
+  ru: { title: 'Викторина по офшорному бизнесу', correct: 'Правильно!', wrong: 'Неправильно!', score: 'Счёт', playAgain: 'Играть снова', question: 'Вопрос', nextQ: 'Следующий вопрос', funFact: 'Интересный факт:', finalScore: 'Итоговый счёт', of: 'из' },
+  pt: { title: 'Quiz de Negocios Offshore', correct: 'Correto!', wrong: 'Errado!', score: 'Pontuacao', playAgain: 'Jogar Novamente', question: 'Pergunta', nextQ: 'Proxima Pergunta', funFact: 'Curiosidade:', finalScore: 'Pontuacao Final', of: 'de' },
+  ar: { title: 'اختبار الأعمال الخارجية', correct: 'صحيح!', wrong: 'خطأ!', score: 'النقاط', playAgain: 'العب مرة أخرى', question: 'سؤال', nextQ: 'السؤال التالي', funFact: 'معلومة:', finalScore: 'النتيجة النهائية', of: 'من' },
+};
+
+const l = labels[lang] || labels.en;
+---
+
+<section class="quiz-section">
+  <div class="container">
+    <h2 class="quiz-title">{l.title}</h2>
+
+    <div class="quiz-wrapper" id="offshoreQuiz">
+      <div class="quiz-progress">
+        <span id="qProgress">{l.question} 1 {l.of} 12</span>
+        <span class="quiz-score-display">{l.score}: <span id="qScore">0</span></span>
+      </div>
+
+      <div class="quiz-card" id="quizCard">
+        <div class="quiz-question" id="qQuestion"></div>
+        <div class="quiz-options" id="qOptions"></div>
+        <div class="quiz-feedback" id="qFeedback"></div>
+        <button class="quiz-next-btn" id="qNextBtn" style="display:none;">{l.nextQ}</button>
+      </div>
+
+      <div class="quiz-final" id="quizFinal" style="display:none;">
+        <div class="final-score-label">{l.finalScore}</div>
+        <div class="final-score-value" id="finalScoreValue"></div>
+        <button class="quiz-play-again" id="qPlayAgain">{l.playAgain}</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .quiz-section {
+    padding: 60px 0;
+  }
+  .quiz-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin-bottom: 32px;
+    background: linear-gradient(135deg, #2563eb, #eab308);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .quiz-wrapper {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .quiz-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: #94a3b8;
+  }
+  .quiz-score-display {
+    font-weight: 700;
+  }
+  .quiz-score-display span {
+    color: #eab308;
+    font-size: 1.1rem;
+  }
+  .quiz-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .quiz-question {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .quiz-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .quiz-options :global(button) {
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    text-align: left;
+    line-height: 1.4;
+  }
+  .quiz-options :global(button:hover:not(:disabled)) {
+    background: rgba(37, 99, 235, 0.1);
+    border-color: rgba(37, 99, 235, 0.3);
+  }
+  .quiz-options :global(button.correct) {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.5);
+    color: #4ade80;
+  }
+  .quiz-options :global(button.wrong) {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #f87171;
+  }
+  .quiz-feedback {
+    margin-top: 20px;
+    min-height: 60px;
+  }
+  .quiz-feedback :global(.feedback-status) {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+  }
+  .quiz-feedback :global(.feedback-fact) {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    line-height: 1.6;
+    padding: 12px 16px;
+    background: rgba(234, 179, 8, 0.05);
+    border-left: 3px solid #eab308;
+    border-radius: 0 8px 8px 0;
+  }
+  .quiz-next-btn {
+    margin-top: 20px;
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .quiz-next-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  }
+  .quiz-final {
+    text-align: center;
+    padding: 60px 32px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 16px;
+  }
+  .final-score-label {
+    font-size: 1rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .final-score-value {
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #2563eb, #eab308);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 24px;
+  }
+  .quiz-play-again {
+    padding: 14px 40px;
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+    color: #0a0b10;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .quiz-play-again:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(234, 179, 8, 0.3);
+  }
+  @media (max-width: 640px) {
+    .quiz-options {
+      grid-template-columns: 1fr;
+    }
+    .quiz-card {
+      padding: 24px 18px;
+    }
+  }
+</style>
+
+<script define:vars={{ correctText: l.correct, wrongText: l.wrong, questionText: l.question, ofText: l.of, funFactText: l.funFact, totalQuestions: 12 }}>
+  const allQuestions = [
+    {
+      q: "Which country has 0% corporate tax for offshore companies?",
+      options: ["UAE", "Kiribati", "Singapore", "Germany"],
+      answer: 0,
+      fact: "The UAE has no corporate tax on offshore companies registered in free zones. Kiribati also offers favorable tax conditions for international businesses. Multiple jurisdictions offer 0% corporate tax!"
+    },
+    {
+      q: "What does IBC stand for in offshore business?",
+      options: ["International Banking Corporation", "International Business Company", "Internal Business Council", "Integrated Business Certificate"],
+      answer: 1,
+      fact: "An International Business Company (IBC) is a corporate structure commonly used in offshore jurisdictions. IBCs benefit from tax exemptions and simplified reporting in many countries."
+    },
+    {
+      q: "Which of these is NOT a common offshore jurisdiction?",
+      options: ["Cayman Islands", "Sweden", "Belize", "Nevis"],
+      answer: 1,
+      fact: "Sweden has one of the highest tax rates in the world (around 20.6% corporate tax). Popular offshore jurisdictions like the Cayman Islands, Belize, and Nevis offer much more favorable tax structures."
+    },
+    {
+      q: "What is the primary purpose of a Registered Agent?",
+      options: ["To manage company finances", "To act as the official point of contact in the jurisdiction", "To handle marketing", "To recruit employees"],
+      answer: 1,
+      fact: "A Registered Agent is a legal requirement in most offshore jurisdictions. They serve as the official liaison between the company and the local government, receiving legal documents and ensuring compliance."
+    },
+    {
+      q: "How long does typical offshore company incorporation take?",
+      options: ["6-12 months", "2-6 weeks", "1-2 days", "Over 1 year"],
+      answer: 1,
+      fact: "Most offshore jurisdictions can process company incorporation within 2-6 weeks. Some express services in jurisdictions like Seychelles or BVI can complete formation in as little as 24-48 hours."
+    },
+    {
+      q: "What is the purpose of a nominee director?",
+      options: ["Tax evasion", "Privacy protection", "Hiring staff", "Opening bank accounts"],
+      answer: 1,
+      fact: "Nominee directors provide privacy by having their name appear on public records instead of the beneficial owner. This is a completely legal practice used to protect the identity of the actual business owner."
+    },
+    {
+      q: "Which payment method is increasingly accepted for offshore registration?",
+      options: ["Only bank wire", "Only cash", "Cryptocurrency", "Only credit cards"],
+      answer: 2,
+      fact: "Cryptocurrency payments are increasingly accepted by offshore service providers. Bitcoin, Ethereum, and stablecoins like USDT are popular options that offer fast international transactions with lower fees."
+    },
+    {
+      q: "What is a Bearer Share?",
+      options: ["A share traded on public exchanges", "A share owned by whoever physically holds the certificate", "A share given to employees", "A government bond"],
+      answer: 1,
+      fact: "Bearer shares are owned by whoever holds the physical certificate. While once common in offshore jurisdictions, many countries have now restricted or eliminated bearer shares due to anti-money laundering regulations."
+    },
+    {
+      q: "Which BRICS nation is known for Special Economic Zones?",
+      options: ["Brazil", "Russia", "China", "South Africa"],
+      answer: 2,
+      fact: "China pioneered Special Economic Zones (SEZs) starting with Shenzhen in 1980. Today, China has over 2,500 SEZs offering tax incentives, simplified regulations, and preferential policies for foreign investment."
+    },
+    {
+      q: "What does KYC stand for in banking?",
+      options: ["Keep Your Cash", "Know Your Customer", "Key Yearly Compliance", "Knowledge of Your Capital"],
+      answer: 1,
+      fact: "Know Your Customer (KYC) is a mandatory process where banks verify the identity of their clients. For offshore companies, KYC requirements include proof of identity, address, and source of funds."
+    },
+    {
+      q: "What is a Freeport or Free Trade Zone?",
+      options: ["A port with no ships", "A tax-free retail area", "A designated area with special customs and tax rules", "A digital marketplace"],
+      answer: 2,
+      fact: "Free Trade Zones are designated areas where goods can be imported, handled, and re-exported without customs duties. Dubai's Jebel Ali Free Zone is one of the world's largest, hosting over 8,700 companies."
+    },
+    {
+      q: "What is substance requirement in offshore jurisdictions?",
+      options: ["The company must have physical weight", "The company must demonstrate real economic activity", "The company must have many shareholders", "The company must be old"],
+      answer: 1,
+      fact: "Economic substance requirements mandate that companies demonstrate genuine business activity in their jurisdiction of incorporation. This includes having local employees, office space, and decision-making conducted locally."
+    },
+    {
+      q: "Which island nation in the Pacific offers offshore company registration?",
+      options: ["Kiribati", "Japan", "Australia", "New Zealand"],
+      answer: 0,
+      fact: "Kiribati, a Pacific island nation, offers company registration services. Its strategic location and developing regulatory framework make it an emerging choice for international business structures."
+    },
+    {
+      q: "What is a Protected Cell Company (PCC)?",
+      options: ["A company in a vault", "A structure where assets are segregated into separate cells", "A military contractor", "A phone company"],
+      answer: 1,
+      fact: "A Protected Cell Company allows a single legal entity to create separate 'cells' with ring-fenced assets and liabilities. Originally from Guernsey, PCCs are popular for captive insurance and investment funds."
+    },
+    {
+      q: "What is the Common Reporting Standard (CRS)?",
+      options: ["A standard for website design", "An automatic exchange of financial account information between countries", "A company registration system", "A banking software"],
+      answer: 1,
+      fact: "The CRS, developed by the OECD, requires financial institutions to report account information to tax authorities, which is then shared with the account holder's country of tax residence. Over 100 jurisdictions participate."
+    }
+  ];
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  let questions = shuffle(allQuestions).slice(0, totalQuestions);
+  let currentQ = 0;
+  let score = 0;
+  let answered = false;
+
+  const qProgress = document.getElementById('qProgress');
+  const qScore = document.getElementById('qScore');
+  const qQuestion = document.getElementById('qQuestion');
+  const qOptions = document.getElementById('qOptions');
+  const qFeedback = document.getElementById('qFeedback');
+  const qNextBtn = document.getElementById('qNextBtn');
+  const quizCard = document.getElementById('quizCard');
+  const quizFinal = document.getElementById('quizFinal');
+  const finalScoreValue = document.getElementById('finalScoreValue');
+  const qPlayAgain = document.getElementById('qPlayAgain');
+
+  function renderQuestion() {
+    const q = questions[currentQ];
+    qProgress.textContent = `${questionText} ${currentQ + 1} ${ofText} ${totalQuestions}`;
+    qQuestion.textContent = q.q;
+    qOptions.innerHTML = '';
+    qFeedback.innerHTML = '';
+    qNextBtn.style.display = 'none';
+    answered = false;
+
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handleAnswer(idx, btn));
+      qOptions.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(idx, btn) {
+    if (answered) return;
+    answered = true;
+    const q = questions[currentQ];
+    const allBtns = qOptions.querySelectorAll('button');
+    allBtns.forEach(b => { b.disabled = true; });
+
+    if (idx === q.answer) {
+      btn.classList.add('correct');
+      score++;
+      qScore.textContent = score;
+      qFeedback.innerHTML = `<div class="feedback-status" style="color:#4ade80;">${correctText}</div><div class="feedback-fact"><strong>${funFactText}</strong> ${q.fact}</div>`;
+    } else {
+      btn.classList.add('wrong');
+      allBtns[q.answer].classList.add('correct');
+      qFeedback.innerHTML = `<div class="feedback-status" style="color:#f87171;">${wrongText}</div><div class="feedback-fact"><strong>${funFactText}</strong> ${q.fact}</div>`;
+    }
+
+    if (currentQ < totalQuestions - 1) {
+      qNextBtn.style.display = 'inline-block';
+    } else {
+      setTimeout(showFinal, 1500);
+    }
+  }
+
+  function showFinal() {
+    quizCard.style.display = 'none';
+    quizFinal.style.display = 'block';
+    finalScoreValue.textContent = `${score} ${ofText} ${totalQuestions}`;
+  }
+
+  qNextBtn.addEventListener('click', () => {
+    currentQ++;
+    renderQuestion();
+  });
+
+  qPlayAgain.addEventListener('click', () => {
+    window.location.reload();
+  });
+
+  renderQuestion();
+</script>
